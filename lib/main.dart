@@ -11,6 +11,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GameWidget(game: BrickBreaker());
+    return MaterialApp(
+      home: Scaffold(body: GameWidget(game: BrickBreaker())),
+    );
   }
 }
