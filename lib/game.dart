@@ -11,6 +11,11 @@ import 'package:flutter/services.dart';
 
 class BrickBreaker extends FlameGame
     with HasKeyboardHandlerComponents, TapCallbacks, HasCollisionDetection {
+  bool isGameOver = false;
+
+  BrickBreaker();
+
+  // SPRITES
   late PaddleSprite paddle;
   late Background background;
   late Ball ball;
@@ -34,10 +39,15 @@ class BrickBreaker extends FlameGame
     add(paddle);
 
     // ball sprite
-    ball = Ball(Vector2(size.x / 2, 50), direction: BallDirection.DOWN);
+    ball = Ball(
+      position: Vector2(size.x / 2, size.y / 2),
+      // tweak to taste; nonzero X gives immediate diagonal motion
+      initialVelocity: Vector2(ballVelocityX, ballVelocityY),
+    );
     add(ball);
   }
 
+  // PADDLE CONTROLS
   // TAP LISTENER -> for mobile
   @override
   void onTapDown(TapDownEvent event) {
@@ -87,12 +97,39 @@ class BrickBreaker extends FlameGame
     return super.onKeyEvent(event, keysPressed);
   }
 
-  // CHANGE BALL DIRECTION
-  void changeBallDirection() {
-    if (ball.direction == BallDirection.DOWN) {
-      ball.direction = BallDirection.UP;
-    } else {
-      ball.direction = BallDirection.DOWN;
-    }
+  // GAME OVER
+  void gameOver() {
+    if (isGameOver) return;
+
+    pauseEngine();
+
+    showDialog(
+      context: buildContext!,
+      builder: (_) => AlertDialog(
+        title: Text("Game Over"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(buildContext!).pop(); // close dialog
+              restartGame();
+            },
+            child: Text("Restart"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // RESTART GAME
+  void restartGame() {
+    isGameOver = false;
+    resumeEngine();
+
+    // reset ball
+    ball.position = Vector2(size.x / 2, size.y / 2);
+    ball.velocity = Vector2(ballVelocityX, ballVelocityY);
+
+    // reset paddle
+    paddle.position = Vector2(size.x / 2, size.y - 100);
   }
 }

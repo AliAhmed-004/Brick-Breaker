@@ -1,22 +1,23 @@
-// ignore_for_file: constant_identifier_names
-
-import 'package:brick_breaker/constants.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
-enum BallDirection { UP, DOWN }
+import '../constants.dart';
+import '../game.dart';
 
-class Ball extends CircleComponent with CollisionCallbacks {
-  Ball(Vector2 position, {required this.direction})
-    : super(
+class Ball extends CircleComponent
+    with CollisionCallbacks, HasGameReference<BrickBreaker> {
+  Ball({required Vector2 position, Vector2? initialVelocity})
+    : initialVelocity =
+          initialVelocity ?? Vector2(ballVelocityX, ballVelocityY),
+      super(
+        position: position,
         radius: ballRadius,
         paint: Paint()..color = ballColor,
-        position: position,
       );
 
-  Vector2 velocity = Vector2(0, ballVelocity);
-  BallDirection direction = BallDirection.DOWN;
+  final Vector2 initialVelocity;
+  late Vector2 velocity;
 
   @override
   Future<void> onLoad() async {
@@ -24,23 +25,35 @@ class Ball extends CircleComponent with CollisionCallbacks {
 
     // Add hitbox
     add(CircleHitbox());
+    velocity = initialVelocity; // signed vector (x = left/right, y = up/down)
   }
 
-  // UPDATE -> every second
   @override
   void update(double dt) {
-    if (direction == BallDirection.DOWN) {
-      position += velocity * dt;
-    } else {
-      // Prevent ball from moving offscreen vertically (up for now)
-      if (position.y + radius < 0) {
-        // reset position vertically
-        // position.y = 0;
+    super.update(dt);
 
-        // change direction
-        direction = BallDirection.DOWN;
-      }
-      position -= velocity * dt;
+    // 1) move
+    position += velocity * dt;
+
+    // 2) side walls bounce (flip X)
+    if (position.x - radius <= 0 && velocity.x < 0) {
+      position.x = radius;
+      velocity.x = -velocity.x;
+    }
+    if (position.x + radius >= game.size.x && velocity.x > 0) {
+      position.x = game.size.x - radius;
+      velocity.x = -velocity.x;
+    }
+
+    // 3) top wall bounce (flip Y).
+    if (position.y - radius <= 0 && velocity.y < 0) {
+      position.y = radius;
+      velocity.y = -velocity.y;
+    }
+
+    // 4) floor (game over)
+    if (position.y - radius > game.size.y) {
+      game.gameOver();
     }
   }
 }
