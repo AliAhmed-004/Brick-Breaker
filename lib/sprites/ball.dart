@@ -1,3 +1,4 @@
+import 'package:brick_breaker/sprites/brick/brick.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
@@ -54,6 +55,36 @@ class Ball extends CircleComponent
     // 4) floor (game over)
     if (position.y - radius > game.size.y) {
       game.gameOver();
+    }
+  }
+
+  @override
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollision(intersectionPoints, other);
+
+    if (other is Brick) {
+      // Get ball and brick centers
+      final ballCenter = center;
+      final brickCenter = other.center;
+
+      // Compare the difference
+      final dx = (ballCenter.x - brickCenter.x).abs();
+      final dy = (ballCenter.y - brickCenter.y).abs();
+
+      if (dx > dy) {
+        // Hit was more on the left/right → flip X
+        velocity.x = -velocity.x;
+      } else {
+        // Hit was more on top/bottom → flip Y
+        velocity.y = -velocity.y;
+      }
+
+      other.removeFromParent(); // remove brick
+
+      // re-add bricks if all bricks are removed
+      if (children.whereType<Brick>().isEmpty) {
+        game.spawnBricks(); // next level
+      }
     }
   }
 }

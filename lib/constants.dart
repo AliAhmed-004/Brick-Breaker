@@ -11,3 +11,7 @@ Color ballColor = Colors.purple[200]!;
 const double ballRadius = 10;
 const double ballVelocityX = 0;
 const double ballVelocityY = 340;
+
+// BRICK
+final double brickWidth = 60;
+final double brickHeight = 20;

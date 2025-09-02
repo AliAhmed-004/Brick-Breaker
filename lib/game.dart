@@ -9,6 +9,8 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'sprites/brick/brick.dart';
+
 class BrickBreaker extends FlameGame
     with HasKeyboardHandlerComponents, TapCallbacks, HasCollisionDetection {
   bool isGameOver = false;
@@ -45,6 +47,9 @@ class BrickBreaker extends FlameGame
       initialVelocity: Vector2(ballVelocityX, ballVelocityY),
     );
     add(ball);
+
+    // brick sprites
+    spawnBricks();
   }
 
   // PADDLE CONTROLS
@@ -135,5 +140,35 @@ class BrickBreaker extends FlameGame
 
     // reset paddle
     paddle.position = Vector2(size.x / 2, size.y - 100);
+
+    // re-add bricks
+    children.whereType<Brick>().forEach((brick) => brick.removeFromParent());
+    spawnBricks();
+  }
+
+  // ADD BRICKS
+  void spawnBricks() {
+    final brickSize = Vector2(brickWidth, brickHeight);
+    const padding = 5.0;
+    const rows = 3;
+
+    final cols = ((size.x + padding) ~/ (brickSize.x + padding));
+    final totalWidth = cols * (brickSize.x + padding) - padding;
+    final startX = (size.x - totalWidth) / 2; // center all bricks
+
+    for (int row = 0; row < rows; row++) {
+      for (int col = 0; col < cols; col++) {
+        final x = startX + col * (brickSize.x + padding);
+        final y = row * (brickSize.y + padding);
+
+        final brick = Brick(
+          position: Vector2(x, y + 50), // push down from top a bit
+          size: brickSize,
+          color: Colors.blueAccent,
+        );
+
+        add(brick);
+      }
+    }
   }
 }
