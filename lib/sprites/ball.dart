@@ -80,11 +80,6 @@ class Ball extends CircleComponent
       }
 
       other.removeFromParent(); // remove brick
-
-      // re-add bricks if all bricks are removed
-      if (children.whereType<Brick>().isEmpty) {
-        game.spawnBricks(); // next level
-      }
     }
   }
 }

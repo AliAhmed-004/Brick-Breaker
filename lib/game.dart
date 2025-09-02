@@ -88,6 +88,10 @@ class BrickBreaker extends FlameGame
     if (paddleMoveRight) {
       paddle.moveRight(size.x, dt);
     }
+
+    if (children.whereType<Brick>().isEmpty) {
+      finishLevel(); // next level
+    }
   }
 
   // KEYBOARD LISTENER -> for desktop
@@ -100,6 +104,19 @@ class BrickBreaker extends FlameGame
     paddleMoveRight = keysPressed.contains(LogicalKeyboardKey.arrowRight);
 
     return super.onKeyEvent(event, keysPressed);
+  }
+
+  // FINISH LEVEL
+  void finishLevel() {
+    showDialog(
+      context: buildContext!,
+      builder: (buildContext) => AlertDialog(
+        title: Text("Level Finished!"),
+        actions: [
+          TextButton(onPressed: restartGame, child: Text("Play Again")),
+        ],
+      ),
+    );
   }
 
   // GAME OVER
