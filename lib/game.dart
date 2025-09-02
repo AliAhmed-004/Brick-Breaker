@@ -72,7 +72,7 @@ class BrickBreaker extends FlameGame
     paddleMoveRight = false;
   }
 
-  @override
+  // UPDATE -> every second
   @override
   void update(double dt) {
     super.update(dt);
@@ -104,18 +104,22 @@ class BrickBreaker extends FlameGame
     pauseEngine();
 
     showDialog(
+      barrierDismissible: false,
       context: buildContext!,
-      builder: (_) => AlertDialog(
-        title: Text("Game Over"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(buildContext!).pop(); // close dialog
-              restartGame();
-            },
-            child: Text("Restart"),
-          ),
-        ],
+      builder: (_) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: Text("Game Over"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(buildContext!).pop(); // close dialog
+                restartGame();
+              },
+              child: Text("Restart"),
+            ),
+          ],
+        ),
       ),
     );
   }
