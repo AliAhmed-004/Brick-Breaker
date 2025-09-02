@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class BrickBreaker extends FlameGame
-    with HasKeyboardHandlerComponents, HasCollisionDetection {
+    with HasKeyboardHandlerComponents, TapCallbacks, HasCollisionDetection {
   late PaddleSprite paddle;
   late Background background;
   late Ball ball;
@@ -34,6 +34,21 @@ class BrickBreaker extends FlameGame
     add(ball);
   }
 
+  // TAP LISTENER -> for mobile
+  @override
+  void onTapDown(TapDownEvent event) {
+    // get the position where tap was detected
+    final tapPosition = event.localPosition;
+
+    // check if it was on left half of the screen
+    if (tapPosition.x < size.x / 2) {
+      paddle.moveLeft(size.x);
+    } else {
+      paddle.moveRight(size.x);
+    }
+  }
+
+  // KEYBOARD LISTENER -> for desktop
   @override
   KeyEventResult onKeyEvent(
     KeyEvent event,
