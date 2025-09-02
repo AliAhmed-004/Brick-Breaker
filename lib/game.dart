@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:brick_breaker/constants.dart';
+import 'package:brick_breaker/sprites/background.dart';
 import 'package:brick_breaker/sprites/paddle_sprite.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
@@ -9,10 +10,16 @@ import 'package:flutter/services.dart';
 
 class BrickBreaker extends FlameGame with HasKeyboardHandlerComponents {
   late PaddleSprite paddle;
+  late Background background;
 
   @override
   FutureOr<void> onLoad() {
     // LOAD ALL THE SPRITES
+    background = Background();
+    add(background);
+    // background sprite
+
+    // paddle sprite
     paddle = PaddleSprite(
       position: Vector2(size.x / 2, size.y - 100), //position
       size: Vector2(paddleWidth, paddleHeight), //size
