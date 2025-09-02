@@ -14,6 +14,7 @@ import 'sprites/brick/brick.dart';
 class BrickBreaker extends FlameGame
     with HasKeyboardHandlerComponents, TapCallbacks, HasCollisionDetection {
   bool isGameOver = false;
+  bool isLevelFinished = false;
 
   BrickBreaker();
 
@@ -50,6 +51,7 @@ class BrickBreaker extends FlameGame
 
     // brick sprites
     spawnBricks();
+    // spawnTestBricks();
   }
 
   // PADDLE CONTROLS
@@ -108,12 +110,24 @@ class BrickBreaker extends FlameGame
 
   // FINISH LEVEL
   void finishLevel() {
+    if (isLevelFinished) return; // prevent multiple dialogs
+
+    pauseEngine();
+
+    isLevelFinished = true;
+
     showDialog(
       context: buildContext!,
       builder: (buildContext) => AlertDialog(
         title: Text("Level Finished!"),
         actions: [
-          TextButton(onPressed: restartGame, child: Text("Play Again")),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(buildContext); // pop the dialog
+              restartGame();
+            },
+            child: Text("Play Again"),
+          ),
         ],
       ),
     );
@@ -122,6 +136,8 @@ class BrickBreaker extends FlameGame
   // GAME OVER
   void gameOver() {
     if (isGameOver) return;
+
+    isLevelFinished = false;
 
     pauseEngine();
 
@@ -187,5 +203,16 @@ class BrickBreaker extends FlameGame
         add(brick);
       }
     }
+  }
+
+  // Spawn test bricks
+  void spawnTestBricks() {
+    final testBrick = Brick(
+      position: Vector2(0, size.y - 200),
+      size: Vector2(60, 40),
+      color: Colors.red,
+    );
+
+    add(testBrick);
   }
 }

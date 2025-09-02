@@ -31,8 +31,9 @@ class PaddleSprite extends RectangleComponent
   }
 
   void moveRight(double gameWidth, double dt) {
-    if (position.x + size.x <= gameWidth)
+    if (position.x + size.x <= gameWidth) {
       position.x += paddleMovementSpeed * dt;
+    }
   }
 
   // COLLISION DETECTION
