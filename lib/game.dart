@@ -15,6 +15,10 @@ class BrickBreaker extends FlameGame
   late Background background;
   late Ball ball;
 
+  // Paddle controls
+  bool paddleMoveLeft = false;
+  bool paddleMoveRight = false;
+
   @override
   FutureOr<void> onLoad() {
     // LOAD ALL THE SPRITES
@@ -37,14 +41,37 @@ class BrickBreaker extends FlameGame
   // TAP LISTENER -> for mobile
   @override
   void onTapDown(TapDownEvent event) {
-    // get the position where tap was detected
     final tapPosition = event.localPosition;
 
-    // check if it was on left half of the screen
     if (tapPosition.x < size.x / 2) {
-      paddle.moveLeft(size.x);
+      paddleMoveLeft = true;
     } else {
-      paddle.moveRight(size.x);
+      paddleMoveRight = true;
+    }
+  }
+
+  @override
+  void onTapUp(TapUpEvent event) {
+    paddleMoveLeft = false;
+    paddleMoveRight = false;
+  }
+
+  @override
+  void onTapCancel(TapCancelEvent event) {
+    paddleMoveLeft = false;
+    paddleMoveRight = false;
+  }
+
+  @override
+  @override
+  void update(double dt) {
+    super.update(dt);
+
+    if (paddleMoveLeft) {
+      paddle.moveLeft(dt);
+    }
+    if (paddleMoveRight) {
+      paddle.moveRight(size.x, dt);
     }
   }
 
@@ -54,12 +81,9 @@ class BrickBreaker extends FlameGame
     KeyEvent event,
     Set<LogicalKeyboardKey> keysPressed,
   ) {
-    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-      paddle.moveLeft(size.x);
-    }
-    if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-      paddle.moveRight(size.x);
-    }
+    paddleMoveLeft = keysPressed.contains(LogicalKeyboardKey.arrowLeft);
+    paddleMoveRight = keysPressed.contains(LogicalKeyboardKey.arrowRight);
+
     return super.onKeyEvent(event, keysPressed);
   }
 

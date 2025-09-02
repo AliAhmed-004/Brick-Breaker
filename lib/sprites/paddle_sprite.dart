@@ -24,13 +24,14 @@ class PaddleSprite extends RectangleComponent
 
   // MOVEMENT METHODS
   // move left
-  void moveLeft(double gameWidth) {
+  void moveLeft(double dt) {
     // prevent going off screen
-    if (position.x >= 0) position.x -= paddleMovementSpeed;
+    if (position.x >= 0) position.x -= paddleMovementSpeed * dt;
   }
 
-  void moveRight(double gameWidth) {
-    if (position.x + size.x <= gameWidth) position.x += paddleMovementSpeed;
+  void moveRight(double gameWidth, double dt) {
+    if (position.x + size.x <= gameWidth)
+      position.x += paddleMovementSpeed * dt;
   }
 
   // COLLISION DETECTION
