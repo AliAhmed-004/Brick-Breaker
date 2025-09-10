@@ -49,7 +49,7 @@ class BrickBreaker extends FlameGame
     );
     add(ball);
 
-    spawnBricks(startLevel);
+    spawnBricks();
   }
 
   // PADDLE CONTROLS
@@ -175,54 +175,64 @@ class BrickBreaker extends FlameGame
 
     children.whereType<Brick>().forEach((brick) => brick.removeFromParent());
 
-    final currentLevel = Provider.of<LevelProvider>(
-      buildContext!,
-      listen: false,
-    ).level;
-    spawnBricks(currentLevel); // spawn with new level
+    spawnBricks(); // spawn with new level
 
     resumeEngine();
   }
 
   // Procedural brick grid generator
-  List<List<int>> generateLevelGrid(int level, int rows, int cols) {
-    final rand = Random(level); // seed ensures repeatability
+  List<List<int>> generatePuzzleLevel(int level, int rows, int cols) {
+    final rand = Random(level);
 
-    // As levels go up, add more density
-    double baseChance = 0.4 + (level * 0.05);
-    if (baseChance > 0.9) baseChance = 0.9; // cap at 90%
+    final grid = List.generate(rows, (_) => List.filled(cols, 0));
 
-    return List.generate(rows, (r) {
-      return List.generate(cols, (c) {
-        return rand.nextDouble() < baseChance ? 1 : 0; // 1 = brick, 0 = empty
-      });
-    });
+    for (int row = 0; row < rows; row++) {
+      for (int col = 0; col < cols ~/ 2; col++) {
+        // baseline chance that decreases per row (more dense at top)
+        double chance = 0.8 - (row * 0.1);
+        if (chance < 0.2) chance = 0.2;
+
+        bool brick = rand.nextDouble() < chance;
+
+        // clustering effect (avoid lonely bricks)
+        if (col > 0 && grid[row][col - 1] == 1 && rand.nextBool()) {
+          brick = true;
+        }
+
+        grid[row][col] = brick ? 1 : 0;
+
+        // symmetry → mirror across center
+        grid[row][cols - col - 1] = grid[row][col];
+      }
+    }
+
+    return grid;
   }
 
   // ADD BRICKS
-  void spawnBricks(int level) {
-    const rows = 3;
-    const cols = 10; // fixed number, same on all devices
+  void spawnBricks() {
+    final level = startLevel;
+
+    const rows = 5;
+    const cols = 10;
     const padding = 5.0;
 
-    // Calculate brick size dynamically
     final totalPaddingX = (cols - 1) * padding;
-    final brickWidthDynamic = (size.x - totalPaddingX) / cols;
-    final brickHeightDynamic = 30.0; // or scale by size.y if you want
+    final brickWidth = (size.x - totalPaddingX) / cols;
+    final brickHeight = 30.0;
+    final brickSize = Vector2(brickWidth, brickHeight);
 
-    final brickSize = Vector2(brickWidthDynamic, brickHeightDynamic);
-
-    // Center horizontally
-    final totalWidth = cols * brickWidthDynamic + totalPaddingX;
+    final totalWidth = cols * brickWidth + totalPaddingX;
     final startX = (size.x - totalWidth) / 2;
 
-    final grid = generateLevelGrid(level, rows, cols);
+    // choose generator
+    final grid = generatePuzzleLevel(level, rows, cols);
 
     for (int row = 0; row < rows; row++) {
       for (int col = 0; col < cols; col++) {
         if (grid[row][col] == 1) {
-          final x = startX + col * (brickWidthDynamic + padding);
-          final y = row * (brickHeightDynamic + padding);
+          final x = startX + col * (brickWidth + padding);
+          final y = row * (brickHeight + padding);
 
           final brick = Brick(
             position: Vector2(x, y + 50),
