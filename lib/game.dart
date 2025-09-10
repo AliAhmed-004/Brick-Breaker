@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:brick_breaker/constants.dart';
+import 'package:brick_breaker/providers/level_provider.dart';
 import 'package:brick_breaker/sprites/background.dart';
 import 'package:brick_breaker/sprites/ball.dart';
 import 'package:brick_breaker/sprites/paddle_sprite.dart';
@@ -8,15 +10,18 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 import 'sprites/brick/brick.dart';
 
 class BrickBreaker extends FlameGame
     with HasKeyboardHandlerComponents, TapCallbacks, HasCollisionDetection {
+  int startLevel;
+
   bool isGameOver = false;
   bool isLevelFinished = false;
 
-  BrickBreaker();
+  BrickBreaker(this.startLevel);
 
   // SPRITES
   late PaddleSprite paddle;
@@ -27,31 +32,29 @@ class BrickBreaker extends FlameGame
   bool paddleMoveLeft = false;
   bool paddleMoveRight = false;
 
+  //Level providers
   @override
   FutureOr<void> onLoad() {
-    // LOAD ALL THE SPRITES
-    // background sprite
-    //background = Background();
-    // add(background);
+    // get current level from provider
 
-    // paddle sprite
     paddle = PaddleSprite(
-      position: Vector2(size.x / 2, size.y - 100), //position
-      size: Vector2(paddleWidth, paddleHeight), //size
+      position: Vector2(size.x / 2, size.y - 100),
+      size: Vector2(paddleWidth, paddleHeight),
     );
     add(paddle);
 
-    // ball sprite
     ball = Ball(
       position: Vector2(size.x / 2, size.y / 2),
-      // tweak to taste; nonzero X gives immediate diagonal motion
       initialVelocity: Vector2(ballVelocityX, ballVelocityY),
     );
     add(ball);
 
-    // brick sprites
-    spawnBricks();
-    // spawnTestBricks();
+    spawnBricks(startLevel);
+  }
+
+  @override
+  void onMount() {
+    super.onMount();
   }
 
   // PADDLE CONTROLS
@@ -110,23 +113,25 @@ class BrickBreaker extends FlameGame
 
   // FINISH LEVEL
   void finishLevel() {
-    if (isLevelFinished) return; // prevent multiple dialogs
+    if (isLevelFinished) return;
 
     pauseEngine();
-
     isLevelFinished = true;
+
+    // increment provider’s level
+    Provider.of<LevelProvider>(buildContext!, listen: false).incrementLevel();
 
     showDialog(
       context: buildContext!,
-      builder: (buildContext) => AlertDialog(
-        title: Text("Level Finished!"),
+      builder: (context) => AlertDialog(
+        title: const Text("Level Finished!"),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(buildContext); // pop the dialog
+              Navigator.pop(context);
               restartGame();
             },
-            child: Text("Play Again"),
+            child: const Text("Next Level"),
           ),
         ],
       ),
@@ -165,42 +170,66 @@ class BrickBreaker extends FlameGame
   // RESTART GAME
   void restartGame() {
     isGameOver = false;
+    isLevelFinished = false;
     resumeEngine();
 
-    // reset ball
     ball.position = Vector2(size.x / 2, size.y / 2);
     ball.velocity = Vector2(ballVelocityX, ballVelocityY);
 
-    // reset paddle
     paddle.position = Vector2(size.x / 2, size.y - 100);
 
-    // re-add bricks
     children.whereType<Brick>().forEach((brick) => brick.removeFromParent());
-    spawnBricks();
+
+    final currentLevel = Provider.of<LevelProvider>(
+      buildContext!,
+      listen: false,
+    ).level;
+    spawnBricks(currentLevel); // spawn with new level
+  }
+
+  // Procedural brick grid generator
+  List<List<int>> generateLevelGrid(int level, int rows, int cols) {
+    final rand = Random(level); // seed ensures repeatability
+
+    // As levels go up, add more density
+    double baseChance = 0.4 + (level * 0.05);
+    if (baseChance > 0.9) baseChance = 0.9; // cap at 90%
+
+    return List.generate(rows, (r) {
+      return List.generate(cols, (c) {
+        return rand.nextDouble() < baseChance ? 1 : 0; // 1 = brick, 0 = empty
+      });
+    });
   }
 
   // ADD BRICKS
-  void spawnBricks() {
+  void spawnBricks(int level) {
     final brickSize = Vector2(brickWidth, brickHeight);
     const padding = 5.0;
     const rows = 3;
 
     final cols = ((size.x + padding) ~/ (brickSize.x + padding));
     final totalWidth = cols * (brickSize.x + padding) - padding;
-    final startX = (size.x - totalWidth) / 2; // center all bricks
+    final startX = (size.x - totalWidth) / 2;
+
+    final grid = generateLevelGrid(level, rows, cols);
 
     for (int row = 0; row < rows; row++) {
       for (int col = 0; col < cols; col++) {
-        final x = startX + col * (brickSize.x + padding);
-        final y = row * (brickSize.y + padding);
+        if (grid[row][col] == 1) {
+          // only spawn brick if "1"
+          final x = startX + col * (brickSize.x + padding);
+          final y = row * (brickSize.y + padding);
 
-        final brick = Brick(
-          position: Vector2(x, y + 50), // push down from top a bit
-          size: brickSize,
-          color: Colors.blueAccent,
-        );
+          final brick = Brick(
+            position: Vector2(x, y + 50),
+            size: brickSize,
+            color:
+                Colors.primaries[(level + row + col) % Colors.primaries.length],
+          );
 
-        add(brick);
+          add(brick);
+        }
       }
     }
   }

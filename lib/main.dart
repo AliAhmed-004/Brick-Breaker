@@ -1,9 +1,17 @@
 import 'package:brick_breaker/game.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'providers/level_provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => LevelProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -12,7 +20,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(body: GameWidget(game: BrickBreaker())),
+      home: Consumer<LevelProvider>(
+        builder: (context, levelProvider, _) {
+          return GameWidget(game: BrickBreaker(levelProvider.level));
+        },
+      ),
     );
   }
 }
