@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:brick_breaker/constants.dart';
+import 'package:brick_breaker/providers/level_provider.dart';
 import 'package:brick_breaker/sprites/background.dart';
 import 'package:brick_breaker/sprites/ball.dart';
 import 'package:brick_breaker/sprites/paddle_sprite.dart';
@@ -8,15 +10,18 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 import 'sprites/brick/brick.dart';
 
 class BrickBreaker extends FlameGame
     with HasKeyboardHandlerComponents, TapCallbacks, HasCollisionDetection {
+  int startLevel;
+
   bool isGameOver = false;
   bool isLevelFinished = false;
 
-  BrickBreaker();
+  BrickBreaker(this.startLevel);
 
   // SPRITES
   late PaddleSprite paddle;
@@ -27,31 +32,24 @@ class BrickBreaker extends FlameGame
   bool paddleMoveLeft = false;
   bool paddleMoveRight = false;
 
+  //Level providers
   @override
   FutureOr<void> onLoad() {
-    // LOAD ALL THE SPRITES
-    // background sprite
-    //background = Background();
-    // add(background);
+    // get current level from provider
 
-    // paddle sprite
     paddle = PaddleSprite(
-      position: Vector2(size.x / 2, size.y - 100), //position
-      size: Vector2(paddleWidth, paddleHeight), //size
+      position: Vector2(size.x / 2, size.y - 100),
+      size: Vector2(paddleWidth, paddleHeight),
     );
     add(paddle);
 
-    // ball sprite
     ball = Ball(
       position: Vector2(size.x / 2, size.y / 2),
-      // tweak to taste; nonzero X gives immediate diagonal motion
       initialVelocity: Vector2(ballVelocityX, ballVelocityY),
     );
     add(ball);
 
-    // brick sprites
     spawnBricks();
-    // spawnTestBricks();
   }
 
   // PADDLE CONTROLS
@@ -83,16 +81,14 @@ class BrickBreaker extends FlameGame
   @override
   void update(double dt) {
     super.update(dt);
-
+    if (!isLevelFinished && children.whereType<Brick>().isEmpty) {
+      finishLevel();
+    }
     if (paddleMoveLeft) {
       paddle.moveLeft(dt);
     }
     if (paddleMoveRight) {
       paddle.moveRight(size.x, dt);
-    }
-
-    if (children.whereType<Brick>().isEmpty) {
-      finishLevel(); // next level
     }
   }
 
@@ -110,23 +106,28 @@ class BrickBreaker extends FlameGame
 
   // FINISH LEVEL
   void finishLevel() {
-    if (isLevelFinished) return; // prevent multiple dialogs
-
-    pauseEngine();
+    if (isLevelFinished) return;
 
     isLevelFinished = true;
+    pauseEngine();
 
     showDialog(
       context: buildContext!,
-      builder: (buildContext) => AlertDialog(
-        title: Text("Level Finished!"),
+      builder: (context) => AlertDialog(
+        title: const Text("Level Finished!"),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(buildContext); // pop the dialog
+              // increment level here instead
+              Provider.of<LevelProvider>(
+                buildContext!,
+                listen: false,
+              ).incrementLevel();
+
+              Navigator.pop(context);
               restartGame();
             },
-            child: Text("Play Again"),
+            child: const Text("Next Level"),
           ),
         ],
       ),
@@ -165,42 +166,82 @@ class BrickBreaker extends FlameGame
   // RESTART GAME
   void restartGame() {
     isGameOver = false;
-    resumeEngine();
+    isLevelFinished = false;
 
-    // reset ball
     ball.position = Vector2(size.x / 2, size.y / 2);
     ball.velocity = Vector2(ballVelocityX, ballVelocityY);
 
-    // reset paddle
     paddle.position = Vector2(size.x / 2, size.y - 100);
 
-    // re-add bricks
     children.whereType<Brick>().forEach((brick) => brick.removeFromParent());
-    spawnBricks();
+
+    spawnBricks(); // spawn with new level
+
+    resumeEngine();
+  }
+
+  // Procedural brick grid generator
+  List<List<int>> generatePuzzleLevel(int level, int rows, int cols) {
+    final rand = Random(level);
+
+    final grid = List.generate(rows, (_) => List.filled(cols, 0));
+
+    for (int row = 0; row < rows; row++) {
+      for (int col = 0; col < cols ~/ 2; col++) {
+        // baseline chance that decreases per row (more dense at top)
+        double chance = 0.8 - (row * 0.1);
+        if (chance < 0.2) chance = 0.2;
+
+        bool brick = rand.nextDouble() < chance;
+
+        // clustering effect (avoid lonely bricks)
+        if (col > 0 && grid[row][col - 1] == 1 && rand.nextBool()) {
+          brick = true;
+        }
+
+        grid[row][col] = brick ? 1 : 0;
+
+        // symmetry → mirror across center
+        grid[row][cols - col - 1] = grid[row][col];
+      }
+    }
+
+    return grid;
   }
 
   // ADD BRICKS
   void spawnBricks() {
-    final brickSize = Vector2(brickWidth, brickHeight);
-    const padding = 5.0;
-    const rows = 3;
+    final level = startLevel;
 
-    final cols = ((size.x + padding) ~/ (brickSize.x + padding));
-    final totalWidth = cols * (brickSize.x + padding) - padding;
-    final startX = (size.x - totalWidth) / 2; // center all bricks
+    const rows = 5;
+    const cols = 10;
+    const padding = 5.0;
+
+    final totalPaddingX = (cols - 1) * padding;
+    final brickWidth = (size.x - totalPaddingX) / cols;
+    final brickHeight = 30.0;
+    final brickSize = Vector2(brickWidth, brickHeight);
+
+    final totalWidth = cols * brickWidth + totalPaddingX;
+    final startX = (size.x - totalWidth) / 2;
+
+    // choose generator
+    final grid = generatePuzzleLevel(level, rows, cols);
 
     for (int row = 0; row < rows; row++) {
       for (int col = 0; col < cols; col++) {
-        final x = startX + col * (brickSize.x + padding);
-        final y = row * (brickSize.y + padding);
+        if (grid[row][col] == 1) {
+          final x = startX + col * (brickWidth + padding);
+          final y = row * (brickHeight + padding);
 
-        final brick = Brick(
-          position: Vector2(x, y + 50), // push down from top a bit
-          size: brickSize,
-          color: Colors.blueAccent,
-        );
-
-        add(brick);
+          final brick = Brick(
+            position: Vector2(x, y + 50),
+            size: brickSize,
+            color:
+                Colors.primaries[(level + row + col) % Colors.primaries.length],
+          );
+          add(brick);
+        }
       }
     }
   }
