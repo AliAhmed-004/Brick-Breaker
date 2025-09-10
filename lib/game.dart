@@ -81,16 +81,14 @@ class BrickBreaker extends FlameGame
   @override
   void update(double dt) {
     super.update(dt);
-
+    if (!isLevelFinished && children.whereType<Brick>().isEmpty) {
+      finishLevel();
+    }
     if (paddleMoveLeft) {
       paddle.moveLeft(dt);
     }
     if (paddleMoveRight) {
       paddle.moveRight(size.x, dt);
-    }
-
-    if (children.whereType<Brick>().isEmpty) {
-      finishLevel(); // next level
     }
   }
 
@@ -110,11 +108,8 @@ class BrickBreaker extends FlameGame
   void finishLevel() {
     if (isLevelFinished) return;
 
-    pauseEngine();
     isLevelFinished = true;
-
-    // increment provider’s level
-    Provider.of<LevelProvider>(buildContext!, listen: false).incrementLevel();
+    pauseEngine();
 
     showDialog(
       context: buildContext!,
@@ -123,6 +118,12 @@ class BrickBreaker extends FlameGame
         actions: [
           TextButton(
             onPressed: () {
+              // increment level here instead
+              Provider.of<LevelProvider>(
+                buildContext!,
+                listen: false,
+              ).incrementLevel();
+
               Navigator.pop(context);
               restartGame();
             },
@@ -166,7 +167,6 @@ class BrickBreaker extends FlameGame
   void restartGame() {
     isGameOver = false;
     isLevelFinished = false;
-    resumeEngine();
 
     ball.position = Vector2(size.x / 2, size.y / 2);
     ball.velocity = Vector2(ballVelocityX, ballVelocityY);
@@ -180,6 +180,8 @@ class BrickBreaker extends FlameGame
       listen: false,
     ).level;
     spawnBricks(currentLevel); // spawn with new level
+
+    resumeEngine();
   }
 
   // Procedural brick grid generator
