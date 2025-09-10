@@ -31,7 +31,7 @@ class BrickBreaker extends FlameGame
   FutureOr<void> onLoad() {
     // LOAD ALL THE SPRITES
     // background sprite
-    // background = Background();
+    //background = Background();
     // add(background);
 
     // paddle sprite
