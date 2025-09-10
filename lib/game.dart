@@ -52,11 +52,6 @@ class BrickBreaker extends FlameGame
     spawnBricks(startLevel);
   }
 
-  @override
-  void onMount() {
-    super.onMount();
-  }
-
   // PADDLE CONTROLS
   // TAP LISTENER -> for mobile
   @override
@@ -204,12 +199,19 @@ class BrickBreaker extends FlameGame
 
   // ADD BRICKS
   void spawnBricks(int level) {
-    final brickSize = Vector2(brickWidth, brickHeight);
-    const padding = 5.0;
     const rows = 3;
+    const cols = 10; // fixed number, same on all devices
+    const padding = 5.0;
 
-    final cols = ((size.x + padding) ~/ (brickSize.x + padding));
-    final totalWidth = cols * (brickSize.x + padding) - padding;
+    // Calculate brick size dynamically
+    final totalPaddingX = (cols - 1) * padding;
+    final brickWidthDynamic = (size.x - totalPaddingX) / cols;
+    final brickHeightDynamic = 30.0; // or scale by size.y if you want
+
+    final brickSize = Vector2(brickWidthDynamic, brickHeightDynamic);
+
+    // Center horizontally
+    final totalWidth = cols * brickWidthDynamic + totalPaddingX;
     final startX = (size.x - totalWidth) / 2;
 
     final grid = generateLevelGrid(level, rows, cols);
@@ -217,9 +219,8 @@ class BrickBreaker extends FlameGame
     for (int row = 0; row < rows; row++) {
       for (int col = 0; col < cols; col++) {
         if (grid[row][col] == 1) {
-          // only spawn brick if "1"
-          final x = startX + col * (brickSize.x + padding);
-          final y = row * (brickSize.y + padding);
+          final x = startX + col * (brickWidthDynamic + padding);
+          final y = row * (brickHeightDynamic + padding);
 
           final brick = Brick(
             position: Vector2(x, y + 50),
@@ -227,7 +228,6 @@ class BrickBreaker extends FlameGame
             color:
                 Colors.primaries[(level + row + col) % Colors.primaries.length],
           );
-
           add(brick);
         }
       }
