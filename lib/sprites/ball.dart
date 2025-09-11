@@ -62,24 +62,31 @@ class Ball extends CircleComponent
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
 
-    if (other is Brick) {
-      // Get ball and brick centers
-      final ballCenter = center;
-      final brickCenter = other.center;
+    if (other is Brick && intersectionPoints.isNotEmpty) {
+      final hitPoint = intersectionPoints.first;
 
-      // Compare the difference
-      final dx = (ballCenter.x - brickCenter.x).abs();
-      final dy = (ballCenter.y - brickCenter.y).abs();
+      // Distances from brick edges
+      final brickRect = other.toRect();
+      final fromLeft = (hitPoint.x - brickRect.left).abs();
+      final fromRight = (hitPoint.x - brickRect.right).abs();
+      final fromTop = (hitPoint.y - brickRect.top).abs();
+      final fromBottom = (hitPoint.y - brickRect.bottom).abs();
 
-      if (dx > dy) {
-        // Hit was more on the left/right → flip X
-        velocity.x = -velocity.x;
+      // Find the closest edge
+      final minDist = [
+        fromLeft,
+        fromRight,
+        fromTop,
+        fromBottom,
+      ].reduce((a, b) => a < b ? a : b);
+
+      if (minDist == fromLeft || minDist == fromRight) {
+        velocity.x = -velocity.x; // side collision
       } else {
-        // Hit was more on top/bottom → flip Y
-        velocity.y = -velocity.y;
+        velocity.y = -velocity.y; // top/bottom collision
       }
 
-      other.removeFromParent(); // remove brick
+      other.removeFromParent();
     }
   }
 }
