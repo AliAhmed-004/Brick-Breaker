@@ -142,25 +142,7 @@ class BrickBreaker extends FlameGame
 
     pauseEngine();
 
-    showDialog(
-      barrierDismissible: false,
-      context: buildContext!,
-      builder: (_) => PopScope(
-        canPop: false,
-        child: AlertDialog(
-          title: Text("Game Over"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(buildContext!).pop(); // close dialog
-                restartGame();
-              },
-              child: Text("Restart"),
-            ),
-          ],
-        ),
-      ),
-    );
+    overlays.add("gameOverOverlay");
   }
 
   // RESTART GAME
