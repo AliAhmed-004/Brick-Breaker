@@ -20,3 +20,4 @@ final double brickHeight = 20;
 const String hudOverlay = "hudOverlay";
 const String initialOverlay = "initialOverlay";
 const String gameOverOverlay = "gameOverOverlay";
+const String levelFinishOverlay = "levelFinishOverlay";

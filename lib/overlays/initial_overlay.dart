@@ -1,8 +1,6 @@
 import 'package:brick_breaker/game.dart';
 import 'package:flutter/material.dart';
 
-import '../constants.dart';
-
 class InitialOverlay extends StatelessWidget {
   final BrickBreaker game;
   const InitialOverlay({super.key, required this.game});
@@ -27,8 +25,7 @@ class InitialOverlay extends StatelessWidget {
             // Button to start game
             ElevatedButton.icon(
               onPressed: () {
-                game.overlays.remove(initialOverlay);
-                game.resumeEngine();
+                game.startGame();
               },
               icon: const Icon(Icons.play_arrow),
               label: Text("Start Game"),

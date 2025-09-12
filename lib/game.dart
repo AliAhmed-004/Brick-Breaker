@@ -50,8 +50,13 @@ class BrickBreaker extends FlameGame
     add(ball);
 
     spawnBricks();
+  }
 
+  void startGame() {
+    // Remove menu, show HUD, and resume
+    overlays.remove(initialOverlay);
     overlays.add(hudOverlay);
+    resumeEngine();
   }
 
   // PADDLE CONTROLS
