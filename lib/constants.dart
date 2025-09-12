@@ -15,3 +15,8 @@ const double ballVelocityY = 340;
 // BRICK
 final double brickWidth = 60;
 final double brickHeight = 20;
+
+// OVERLAY NAMES
+const String hudOverlay = "hudOverlay";
+const String initialOverlay = "initialOverlay";
+const String gameOverOverlay = "gameOverOverlay";

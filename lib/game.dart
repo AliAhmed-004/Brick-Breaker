@@ -50,6 +50,8 @@ class BrickBreaker extends FlameGame
     add(ball);
 
     spawnBricks();
+
+    overlays.add(hudOverlay);
   }
 
   // PADDLE CONTROLS
@@ -142,7 +144,7 @@ class BrickBreaker extends FlameGame
 
     pauseEngine();
 
-    overlays.add("gameOverOverlay");
+    overlays.add(gameOverOverlay);
   }
 
   // RESTART GAME

@@ -1,9 +1,11 @@
 import 'package:brick_breaker/game.dart';
+import 'package:brick_breaker/overlays/hud.dart';
 import 'package:brick_breaker/overlays/initial_overlay.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'constants.dart';
 import 'overlays/game_over_overlay.dart';
 import 'providers/level_provider.dart';
 
@@ -27,10 +29,11 @@ class MyApp extends StatelessWidget {
           return GameWidget(
             game: BrickBreaker(levelProvider.level)..pauseEngine(),
             overlayBuilderMap: {
-              "initialOverlay": (context, game) =>
+              initialOverlay: (context, game) =>
                   InitialOverlay(game: game as BrickBreaker),
-              "gameOverOverlay": (context, game) =>
+              gameOverOverlay: (context, game) =>
                   GameOverOverlay(game: game as BrickBreaker),
+              hudOverlay: (context, game) => Hud(),
             },
             initialActiveOverlays: ["initialOverlay"],
           );
