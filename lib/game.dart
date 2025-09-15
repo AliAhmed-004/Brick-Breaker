@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:brick_breaker/constants.dart';
-import 'package:brick_breaker/providers/level_provider.dart';
 import 'package:brick_breaker/sprites/background.dart';
 import 'package:brick_breaker/sprites/ball.dart';
 import 'package:brick_breaker/sprites/paddle_sprite.dart';
@@ -10,7 +9,6 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 
 import 'sprites/brick/brick.dart';
 
@@ -118,27 +116,7 @@ class BrickBreaker extends FlameGame
     isLevelFinished = true;
     pauseEngine();
 
-    showDialog(
-      context: buildContext!,
-      builder: (context) => AlertDialog(
-        title: const Text("Level Finished!"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              // increment level here instead
-              Provider.of<LevelProvider>(
-                buildContext!,
-                listen: false,
-              ).incrementLevel();
-
-              Navigator.pop(context);
-              restartGame();
-            },
-            child: const Text("Next Level"),
-          ),
-        ],
-      ),
-    );
+    overlays.add(levelFinishOverlay);
   }
 
   // GAME OVER

@@ -5,9 +5,9 @@ import 'package:provider/provider.dart';
 import '../game.dart';
 import '../providers/level_provider.dart';
 
-class LevelCompleteOverlay extends StatelessWidget {
+class LevelFinishOverlay extends StatelessWidget {
   final BrickBreaker game;
-  const LevelCompleteOverlay({super.key, required this.game});
+  const LevelFinishOverlay({super.key, required this.game});
 
   @override
   Widget build(BuildContext context) {
@@ -24,13 +24,14 @@ class LevelCompleteOverlay extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                Provider.of<LevelProvider>(
+                final provider = Provider.of<LevelProvider>(
                   context,
                   listen: false,
-                ).incrementLevel();
+                );
+                provider.incrementLevel();
 
+                game.startLevel = provider.level; // update level in *same* game
                 game.overlays.remove(levelFinishOverlay);
-                game.overlays.remove(initialOverlay);
                 game.restartGame();
               },
               child: const Text("Next Level"),
