@@ -26,16 +26,18 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       home: Consumer<LevelProvider>(
         builder: (context, levelProvider, _) {
-          return GameWidget(
-            game: BrickBreaker(levelProvider.level)..pauseEngine(),
-            overlayBuilderMap: {
-              initialOverlay: (context, game) =>
-                  InitialOverlay(game: game as BrickBreaker),
-              gameOverOverlay: (context, game) =>
-                  GameOverOverlay(game: game as BrickBreaker),
-              hudOverlay: (context, game) => Hud(),
-            },
-            initialActiveOverlays: ["initialOverlay"],
+          return SafeArea(
+            child: GameWidget(
+              game: BrickBreaker(levelProvider.level)..pauseEngine(),
+              overlayBuilderMap: {
+                initialOverlay: (context, game) =>
+                    InitialOverlay(game: game as BrickBreaker),
+                gameOverOverlay: (context, game) =>
+                    GameOverOverlay(game: game as BrickBreaker),
+                hudOverlay: (context, game) => Hud(),
+              },
+              initialActiveOverlays: ["initialOverlay"],
+            ),
           );
         },
       ),
