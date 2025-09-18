@@ -144,6 +144,12 @@ class BrickBreaker extends FlameGame
 
     spawnBricks(); // spawn with new level
 
+    // Ensure correct overlays for active gameplay
+    // In case the widget rebuilt and reapplied initial overlays, force-hide them
+    overlays.remove(initialOverlay);
+    overlays.remove(levelFinishOverlay);
+    overlays.add(hudOverlay);
+
     resumeEngine();
   }
 
