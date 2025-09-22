@@ -10,6 +10,11 @@ class LevelProvider extends ChangeNotifier {
     loadLevel();
   }
 
+  // Named constructor to initialize with a known level (e.g., from main before runApp)
+  LevelProvider.withInitialLevel(int initialLevel) {
+    _level = initialLevel;
+  }
+
   // LOAD LEVEL FROM SHARED PREFERENCES
   void loadLevel() async {
     final prefs = await SharedPreferences.getInstance();
