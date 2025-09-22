@@ -1,5 +1,7 @@
 import 'package:brick_breaker/game.dart';
+import 'package:brick_breaker/providers/level_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class InitialOverlay extends StatelessWidget {
   final BrickBreaker game;
@@ -7,6 +9,8 @@ class InitialOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentLevel = context.read<LevelProvider>().level;
+
     return Container(
       color: Colors.transparent,
       child: Center(
@@ -28,7 +32,7 @@ class InitialOverlay extends StatelessWidget {
                 game.startGame();
               },
               icon: const Icon(Icons.play_arrow),
-              label: Text("Start Game"),
+              label: Text("Start Level $currentLevel"),
             ),
           ],
         ),
